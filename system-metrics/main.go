@@ -32,8 +32,6 @@ func main() {
 		hostName = "homelab"
 	}
 
-	fmt.Printf("🚀 Starting metrics collection for %s (%s)\n", hostName, osName)
-
 	// 2. Database Connection
 	connStr := getConnStr()
 	ctx := context.Background()
@@ -46,18 +44,8 @@ func main() {
 	// 3. Ensure Schema
 	ensureSchema(ctx, conn)
 
-	// 4. Run loop
-	fmt.Println("⏳ Starting collection loop (interval: 1 minute)...")
-
-	// Collect immediately on start
+	// 4. Collect and Store Once
 	collectAndStore(ctx, conn, hostName, osName)
-
-	ticker := time.NewTicker(1 * time.Minute)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		collectAndStore(ctx, conn, hostName, osName)
-	}
 }
 
 func collectAndStore(ctx context.Context, conn *pgx.Conn, hostName string, osName string) {
@@ -94,7 +82,10 @@ func collectAndStore(ctx context.Context, conn *pgx.Conn, hostName string, osNam
 		}
 	}
 
-	fmt.Printf("[%s] ✅ Metrics stored in database.\n", now.Format("15:04:05"))
+	// Log success only at the top of the hour
+	if now.Minute() == 0 {
+		fmt.Printf("[%s] ✅ Metrics stored in database.\n", now.Format("15:04:05"))
+	}
 }
 
 func ensureSchema(ctx context.Context, conn *pgx.Conn) {
