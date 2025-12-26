@@ -48,7 +48,7 @@ func main() {
 
 	// 4. Run loop
 	fmt.Println("⏳ Starting collection loop (interval: 1 minute)...")
-	
+
 	// Collect immediately on start
 	collectAndStore(ctx, conn, hostName, osName)
 

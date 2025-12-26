@@ -1,0 +1,69 @@
+name: Go Lint & Test
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'proxy/**'
+      - 'system-metrics/**'
+  push:
+    branches: [main]
+    paths:
+      - 'proxy/**'
+      - 'system-metrics/**'
+
+env:
+  go-version: '1.25'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6.0.0
+      - uses: actions/setup-go@v6.1.0
+        with:
+          go-version: ${{ env.go-version }}
+
+      - name: Check gofmt (Proxy)
+        run: |
+          cd proxy
+          if [ $(gofmt -l . | wc -l) -gt 0 ]; then
+            echo "❌ Proxy code not formatted. Run: gofmt -w proxy/"
+            gofmt -l .
+            exit 1
+          fi
+          echo "✅ Proxy code is properly formatted"
+
+      - name: Run go vet (Proxy)
+        run: cd proxy && go vet ./...
+
+      - name: Check gofmt (Metrics)
+        run: |
+          cd system-metrics
+          if [ $(gofmt -l . | wc -l) -gt 0 ]; then
+            echo "❌ Metrics code not formatted. Run: gofmt -w system-metrics/"
+            gofmt -l .
+            exit 1
+          fi
+          echo "✅ Metrics code is properly formatted"
+
+      - name: Run go vet (Metrics)
+        run: cd system-metrics && go vet ./...
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v6.0.0
+      - uses: actions/setup-go@v6.1.0
+        with:
+          go-version: ${{ env.go-version }}
+
+      # Test Proxy Service
+      - name: Run tests (Proxy)
+        run: cd proxy && go test ./... -v
+
+      # Test Metrics Service
+      - name: Run tests (Metrics)
+        run: cd system-metrics && go test ./... -v
