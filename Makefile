@@ -9,9 +9,6 @@ help:
 	@echo "  make promtail-up       - Start the promtail log collector"
 	@echo "  make promtail-down     - Stop the promtail log collector"
 	@echo "  make promtail-update   - Restart the promtail log collector"
-	@echo "  make metrics-up        - Start the system-metrics collector"
-	@echo "  make metrics-down      - Stop the system-metrics collector"
-	@echo "  make metrics-update    - Restart the system-metrics collector"
 
 # Docker Volume Management
 create:
@@ -64,21 +61,3 @@ promtail-down:
 
 promtail-update: promtail-down promtail-up
 	@echo "Promtail updated."
-
-# System Metrics Collector Management
-metrics-up:
-	@echo "Starting system-metrics collector..."
-	@docker build -t system_metrics_collector -f ./docker/system-metrics/Dockerfile .
-	@docker run -d \
-		--name system_metrics_collector \
-		--restart unless-stopped \
-		--network host \
-		system_metrics_collector
-
-metrics-down:
-	@echo "Stopping system-metrics collector..."
-	@docker stop system_metrics_collector || true
-	@docker rm system_metrics_collector || true
-
-metrics-update: metrics-down metrics-up
-	@echo "System-metrics collector updated."
