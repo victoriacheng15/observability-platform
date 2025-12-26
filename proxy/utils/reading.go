@@ -24,9 +24,7 @@ func (s *ReadingService) ReadingHandler(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(map[string]string{"placeholder": "reading placeholder still"})
 }
 
-// --- ETL: Sync Mongo to Postgres ---
 func (s *ReadingService) SyncReadingHandler(w http.ResponseWriter, r *http.Request) {
-	// Ensure table exists with JSONB support
 	_, err := s.DB.Exec(`CREATE TABLE IF NOT EXISTS reading_analytics (
 		id SERIAL PRIMARY KEY,
 		mongo_id TEXT UNIQUE NOT NULL,
@@ -75,7 +73,6 @@ func (s *ReadingService) SyncReadingHandler(w http.ResponseWriter, r *http.Reque
 		}
 
 		// 2. Load: Insert into Postgres as JSONB
-		// We extract specific fields for indexing, but keep the full doc in payload
 		eventType, _ := doc["event_type"].(string)
 		jsonData, _ := json.Marshal(doc)
 
@@ -91,7 +88,7 @@ func (s *ReadingService) SyncReadingHandler(w http.ResponseWriter, r *http.Reque
 			continue
 		}
 
-		3. Update Source: Mark as processed in Mongo (Commented out for testing)
+		// 3. Update Source: Mark as processed in Mongo (Commented out for testing)
 		update := bson.M{"$set": bson.M{"status": "processed"}}
 		_, err = coll.UpdateOne(ctx, bson.M{"_id": objID}, update)
 		if err != nil {
