@@ -1,0 +1,49 @@
+name: GitHub Pages Deployment
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "page/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.1
+      - uses: actions/setup-go@v6.1.0
+        with:
+          go-version: '1.25'
+          cache-dependency-path: page/go.sum
+
+      - name: Build
+        run: |
+          cd page
+          go build -o page.exe main.go
+          ./page.exe
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4.0.0
+        with:
+          path: ./page/dist
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4.0.5
