@@ -3,6 +3,9 @@ help:
 	@echo "  make create            - Create necessary docker volumes"
 	@echo "  make backup            - Backup docker volumes"
 	@echo "  make restore           - Restore docker volumes from backup"
+	@echo "  make go-format         - Format and simplify Go code"
+	@echo "  make go-test           - Run Go tests"
+	@echo "  make go-cov            - Run tests with coverage report"
 	@echo "  make page-build        - Build the GitHu Page"
 	@echo "  make metrics-build     - Build the system metrics collector"
 	@echo "  make proxy-up          - Start the go proxy server"
@@ -24,6 +27,22 @@ backup:
 restore:
 	@echo "Running restore volume script..."
 	@./scripts/manage_volume.sh restore
+
+go-format:
+	@echo "Formatting Go code..."
+	@gofmt -w -s ./proxy ./system-metrics ./page
+
+go-test:
+	@echo "Running Go tests..."
+	@cd proxy && go test ./...
+	@cd system-metrics && go test ./...
+	@cd page && go test ./...
+
+go-cov:
+	@echo "Running tests with coverage..."
+	@cd proxy && go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out && rm coverage.out
+	@cd system-metrics && go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out && rm coverage.out
+	@cd page && go test -coverprofile=coverage.out ./... && go tool cover -func=coverage.out && rm coverage.out
 
 # GitHub Pages Build
 page-build:
