@@ -25,6 +25,10 @@ jobs:
       - uses: actions/setup-go@v6.1.0
         with:
           go-version: ${{ env.go-version }}
+          cache-dependency-path: |
+            proxy/go.sum
+            system-metrics/go.sum
+            page/go.sum
 
       - name: Check gofmt
         run: |
@@ -50,6 +54,10 @@ jobs:
       - uses: actions/setup-go@v6.1.0
         with:
           go-version: ${{ env.go-version }}
+          cache-dependency-path: |
+            proxy/go.sum
+            system-metrics/go.sum
+            page/go.sum
 
       - name: Run tests
         run: |
