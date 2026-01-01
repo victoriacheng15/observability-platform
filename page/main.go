@@ -1,0 +1,221 @@
+package main
+
+import (
+	"fmt"
+	"html/template"
+	"io"
+	"log"
+	"os"
+	"path/filepath"
+	"slices"
+	"strings"
+
+	"gopkg.in/yaml.v3"
+)
+
+// --- Data Models ---
+
+type Feature struct {
+	Title       string `yaml:"title"`
+	Description string `yaml:"description"`
+	Icon        string `yaml:"icon"`
+}
+
+type Hero struct {
+	Title    string `yaml:"title"`
+	Subtitle string `yaml:"subtitle"`
+	CtaText  string `yaml:"cta_text"`
+	CtaLink  string `yaml:"cta_link"`
+	Cta2Text string `yaml:"cta2_text"`
+	Cta2Link string `yaml:"cta2_link"`
+}
+
+type Landing struct {
+	PageTitle string    `yaml:"page_title"`
+	Hero      Hero      `yaml:"hero"`
+	Features  []Feature `yaml:"features"`
+}
+
+type Event struct {
+	Date             string   `yaml:"date"`
+	Title            string   `yaml:"title"`
+	Description      string   `yaml:"description"`
+	DescriptionLines []string `yaml:"-"`
+	RFC              string   `yaml:"rfc"`
+}
+
+type Evolution struct {
+	PageTitle string  `yaml:"page_title"`
+	IntroText string  `yaml:"intro_text"`
+	Events    []Event `yaml:"events"`
+}
+
+type DashboardItem struct {
+	Caption   string `yaml:"caption"`
+	ImagePath string `yaml:"image_path"`
+}
+
+type DashboardCategory struct {
+	Name        string          `yaml:"name"`
+	Description string          `yaml:"description"`
+	Items       []DashboardItem `yaml:"items"`
+}
+
+type Dashboards struct {
+	PageTitle  string              `yaml:"page_title"`
+	Categories []DashboardCategory `yaml:"categories"`
+}
+
+type SiteData struct {
+	Landing    Landing    `yaml:"landing"`
+	Evolution  Evolution  `yaml:"evolution"`
+	Dashboards Dashboards `yaml:"dashboards"`
+}
+
+// --- Main Logic ---
+
+func main() {
+	// 1. Cleanup dist
+	if err := os.RemoveAll("dist"); err != nil {
+		log.Fatalf("Failed to remove dist: %v", err)
+	}
+	if err := os.MkdirAll("dist", 0755); err != nil {
+		log.Fatalf("Failed to create dist: %v", err)
+	}
+
+	// 2. Copy Assets
+	if err := copyDir("assets", "dist/assets"); err != nil {
+		// It's okay if assets dir doesn't exist yet, just log it
+		log.Printf("Warning copying assets: %v", err)
+	}
+
+	// 3. Load Data
+	data, err := loadData("content/data.yaml")
+	if err != nil {
+		log.Fatalf("Failed to load data: %v", err)
+	}
+
+	// Process Descriptions
+	for i := range data.Evolution.Events {
+		lines := strings.Split(data.Evolution.Events[i].Description, "\n")
+		var cleanLines []string
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if trimmed != "" {
+				// Remove leading dash if present
+				cleanLines = append(cleanLines, strings.TrimPrefix(trimmed, "- "))
+			}
+		}
+		data.Evolution.Events[i].DescriptionLines = cleanLines
+	}
+
+	// Reverse Evolution Events (Newest First)
+	slices.Reverse(data.Evolution.Events)
+
+	// 4. Render Pages
+	renderPage("index.html", "templates/index.html", data)
+	renderPage("evolution.html", "templates/evolution.html", data)
+	renderPage("dashboards.html", "templates/dashboards.html", data)
+
+	fmt.Println("Site generated successfully in dist/")
+}
+
+func loadData(path string) (*SiteData, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	var data SiteData
+	dec := yaml.NewDecoder(f)
+	if err := dec.Decode(&data); err != nil {
+		return nil, err
+	}
+	return &data, nil
+}
+
+func renderPage(outFile, tplFile string, data *SiteData) {
+	// Always parse base.html + the specific page template
+	tmpl, err := template.ParseFiles("templates/base.html", tplFile)
+	if err != nil {
+		log.Fatalf("Failed to parse templates for %s: %v", outFile, err)
+	}
+
+	f, err := os.Create(filepath.Join("dist", outFile))
+	if err != nil {
+		log.Fatalf("Failed to create output file %s: %v", outFile, err)
+	}
+	defer f.Close()
+
+	// Execute "base" which should include the specific page content
+	if err := tmpl.ExecuteTemplate(f, "base", data); err != nil {
+		log.Fatalf("Failed to execute template %s: %v", outFile, err)
+	}
+}
+
+// copyDir recursively copies a directory tree, attempting to preserve permissions.
+func copyDir(src, dst string) error {
+	src = filepath.Clean(src)
+	dst = filepath.Clean(dst)
+
+	si, err := os.Stat(src)
+	if err != nil {
+		return err
+	}
+	if !si.IsDir() {
+		return fmt.Errorf("source is not a directory")
+	}
+
+	_, err = os.Stat(dst)
+	if os.IsNotExist(err) {
+		err = os.MkdirAll(dst, si.Mode())
+		if err != nil {
+			return err
+		}
+	}
+
+	entries, err := os.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		srcPath := filepath.Join(src, entry.Name())
+		dstPath := filepath.Join(dst, entry.Name())
+
+		if entry.IsDir() {
+			err = copyDir(srcPath, dstPath)
+			if err != nil {
+				return err
+			}
+		} else {
+			// Copy file
+			if err = copyFile(srcPath, dstPath); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func copyFile(src, dst string) error {
+	in, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer in.Close()
+
+	out, err := os.Create(dst)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, in)
+	if err != nil {
+		return err
+	}
+	return out.Sync()
+}
