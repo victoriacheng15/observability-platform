@@ -52,7 +52,7 @@ page-build:
 # System Metrics Collector
 metrics-build:
 	@echo "Building system metrics collector..."
-	@go build -o metrics-collector.exe main.go
+	@cd system-metrics && go build -o metrics-collector.exe main.go
 
 # Go Proxy Server Management
 proxy-up:
