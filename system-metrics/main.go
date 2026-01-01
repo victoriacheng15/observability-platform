@@ -68,6 +68,7 @@ func collectAndStore(ctx context.Context, conn *pgx.Conn, hostName string, osNam
 		{"network", net},
 	}
 
+	var insertErrors []string
 	for _, m := range metrics {
 		if m.payload == nil {
 			continue
@@ -78,13 +79,19 @@ func collectAndStore(ctx context.Context, conn *pgx.Conn, hostName string, osNam
 			now, hostName, osName, m.mType, payloadJSON,
 		)
 		if err != nil {
-			log.Printf("❌ Failed to insert %s metric: %v", m.mType, err)
+			errMsg := fmt.Sprintf("❌ Failed to insert %s metric: %v", m.mType, err)
+			log.Println(errMsg)
+			insertErrors = append(insertErrors, errMsg)
 		}
 	}
 
-	// Log success only at the top of the hour
+	// Log success only at the top of the hour and if no errors
 	if now.Minute() == 0 {
-		fmt.Printf("[%s] ✅ Metrics stored in database.\n", now.Format("15:04:05"))
+		if len(insertErrors) == 0 {
+			fmt.Printf("[%s] ✅ Metrics stored in database.\n", now.Format("15:04:05"))
+		} else {
+			fmt.Printf("[%s] ⚠️ Metrics collection completed with %d error(s).\n", now.Format("15:04:05"), len(insertErrors))
+		}
 	}
 }
 
