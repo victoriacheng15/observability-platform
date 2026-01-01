@@ -1,0 +1,36 @@
+{{define "title"}}{{ .Evolution.PageTitle }}{{end}}
+
+{{define "header_extra"}}
+<div class="hero">
+    <h1>{{ .Evolution.PageTitle }}</h1>
+    <p>{{ .Evolution.IntroText }}</p>
+</div>
+{{end}}
+
+{{define "content"}}
+<ul class="timeline">
+    {{range .Evolution.Events}}
+    <li>
+        <time class="timeline-date" datetime="{{ .Date }}">{{ .Date }}</time>
+        <article class="timeline-content">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;">
+                <h3>{{ .Title }}</h3>
+                {{if .RFC}}
+                <a href="https://github.com/victoriacheng15/observability-platform/blob/main/{{ .RFC }}" 
+                   class="btn-rfc" 
+                   target="_blank" 
+                   rel="noopener noreferrer">
+                   📄 Read Decision
+                </a>
+                {{end}}
+            </div>
+            <ul>
+                {{range .DescriptionLines}}
+                <li>{{ . }}</li>
+                {{end}}
+            </ul>
+        </article>
+    </li>
+    {{end}}
+</ul>
+{{end}}

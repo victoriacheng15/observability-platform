@@ -1,0 +1,25 @@
+{{define "title"}}{{ .Dashboards.PageTitle }}{{end}}
+
+{{define "header_extra"}}
+<div class="hero">
+    <h1>{{ .Dashboards.PageTitle }}</h1>
+</div>
+{{end}}
+
+{{define "content"}}
+{{range .Dashboards.Categories}}
+<section class="dashboard-category" aria-label="{{ .Name }}">
+    <h2>{{ .Name }}</h2>
+    <p>{{ .Description }}</p>
+    
+    <div class="dashboard-grid">
+        {{range .Items}}
+        <figure class="dashboard-item">
+            <img src="{{ .ImagePath }}" alt="{{ .Caption }}">
+            <figcaption class="dashboard-caption">{{ .Caption }}</figcaption>
+        </figure>
+        {{end}}
+    </div>
+</section>
+{{end}}
+{{end}}

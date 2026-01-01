@@ -1,0 +1,405 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{block "title" .}}{{ .Landing.PageTitle }}{{end}}</title>
+    <style>
+        :root {
+            /* Colors */
+            --primary: #08D9D6;
+            --primary-dark: #07bdb9;
+            --bg: #252A34;
+            --card-bg: #2d333e;
+            --white: #f5f5f5;
+            --text-main: #EAEAEA;
+            --text-heading: #f5f5f5;
+            --text-muted: #94a3b8;
+            --text-muted-light: #cbd5e1;
+            --accent: #FF2E63;
+            --accent-dark: #e62a59;
+            --border: rgba(234, 234, 234, 0.2);
+            --border-light: rgba(234, 234, 234, 0.1);
+            --shadow: rgba(0, 0, 0, 0.2);
+
+            /* Spacing */
+            --space-sm: 0.75rem;
+            --space-md: 1rem;
+            --space-lg: 1.5rem;
+            --space-xl: 2rem;
+            --space-xxl: 3rem;
+
+            /* Font Sizes */
+            --font-sm: 0.9rem;
+            --font-base: 1rem;
+            --font-lg: 1.2rem;
+            --font-xl: 2rem;
+
+            /* Border Radius */
+            --radius-main: 10px;
+        }
+
+        /* CSS Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* Global Styling */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg);
+            font-size: var(--font-base);
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            color: var(--text-heading);
+        }
+
+        /* Layout */
+        .container {
+            max-width: 800px;
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        /* Header & Nav */
+        header {
+            background: var(--bg);
+            color: var(--text-heading);
+            padding: var(--space-xxl) 0;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xxl);
+            border-bottom: 1px solid var(--border-light);
+            padding-bottom: var(--space-md);
+
+            .logo {
+                font-weight: bold;
+                font-size: var(--font-lg);
+                color: var(--primary);
+            }
+
+            ul {
+                display: flex;
+                gap: var(--space-lg);
+            }
+
+            a {
+                color: var(--text-muted-light);
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.3s;
+
+                &:hover {
+                    color: var(--primary);
+                }
+            }
+
+            @media (max-width: 768px) {
+                flex-direction: column;
+                gap: var(--space-xl);
+                text-align: center;
+            }
+        }
+
+        /* Main Content */
+        main.container {
+            margin: var(--space-xxl) auto;
+        }
+
+        footer {
+            background: var(--bg);
+            color: var(--text-muted);
+            text-align: center;
+            padding: var(--space-lg) 0;
+
+            .container {
+                border-top: 1px solid var(--border-light);
+                padding-top: var(--space-lg);
+            }
+
+            a {
+                color: var(--text-muted-light);
+                text-decoration: none;
+                font-weight: 500;
+                transition: color 0.3s;
+
+                &:hover {
+                    color: var(--primary);
+                }
+            }
+        }
+
+        /* Utility classes */
+        .text-center {
+            text-align: center;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: var(--bg);
+            padding: var(--space-sm) var(--space-lg);
+            text-decoration: none;
+            border-radius: var(--radius-main);
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+
+            &:hover {
+                background: var(--primary-dark);
+                transform: translateY(-1px);
+            }
+
+            &.btn-secondary {
+                background: var(--accent);
+                color: var(--white);
+
+                &:hover {
+                    background: var(--accent-dark);
+                }
+            }
+        }
+
+        .btn-rfc {
+            display: inline-flex;
+            align-items: center;
+            font-size: var(--font-sm);
+            font-weight: 600;
+            padding: 0.3rem 0.6rem;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: var(--radius-main);
+            text-decoration: none;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: var(--primary);
+                color: var(--bg);
+                transform: translateY(-1px);
+            }
+        }
+
+        /* Page specific */
+        .hero {
+            text-align: center;
+            display: grid;
+            gap: var(--space-xl);
+
+            h1 {
+                font-size: var(--font-xl);
+                color: var(--primary);
+            }
+
+            p {
+                font-size: var(--font-lg);
+                color: var(--text-muted-light);
+            }
+
+            .hero-actions {
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: var(--space-lg);
+            }
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: var(--space-xl);
+        }
+
+        .feature-card {
+            display: grid;
+            gap: var(--space-md);
+            background: var(--card-bg);
+            padding: var(--space-xl);
+            border-radius: var(--radius-main);
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 6px -1px var(--shadow);
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+
+            &:hover {
+                transform: translateY(-4px);
+                border-color: var(--primary);
+            }
+
+            .feature-icon {
+                font-size: var(--font-xl);
+                color: var(--primary);
+            }
+
+            h3 {
+                color: var(--primary);
+            }
+        }
+
+        .timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+            display: grid;
+            gap: var(--space-xl);
+
+            &:before {
+                content: '';
+                position: absolute;
+                left: 20px;
+                top: 0;
+                bottom: 0;
+                width: 2px;
+                background: var(--border-light);
+            }
+
+            li {
+                position: relative;
+                padding-left: 50px;
+            }
+
+            .timeline-date {
+                font-weight: bold;
+                color: var(--primary);
+                font-size: var(--font-sm);
+                margin-bottom: var(--space-sm);
+                display: block;
+                position: relative;
+
+                &:before {
+                    content: '';
+                    position: absolute;
+                    left: -36px;
+                    top: 4px;
+                    width: 12px;
+                    height: 12px;
+                    background: var(--primary);
+                    border-radius: 50%;
+                    border: 2px solid var(--bg);
+                    box-shadow: 0 0 0 1px var(--primary);
+                }
+            }
+
+            .timeline-content {
+                background: var(--card-bg);
+                padding: var(--space-lg);
+                border-radius: var(--radius-main);
+                border: 1px solid var(--border-light);
+                box-shadow: 0 1px 3px 0 var(--shadow);
+
+                h3 {
+                    margin-bottom: var(--space-sm);
+                    color: var(--primary);
+                }
+
+                ul {
+                    padding-left: 0;
+                    list-style: disc;
+                    color: var(--text-main);
+                    display: grid;
+                    gap: var(--space-sm);
+                    margin-left: var(--space-md);
+                }
+
+                li {
+                    padding-left: 0;
+                }
+            }
+        }
+
+        .dashboard-category {
+            display: grid;
+            gap: var(--space-xl);
+            margin-bottom: var(--space-xl);
+
+            h2 {
+                border-bottom: 2px solid var(--primary);
+                padding-bottom: var(--space-sm);
+                display: inline-block;
+                color: var(--primary);
+            }
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--space-xl);
+        }
+
+        .dashboard-item {
+            background: var(--card-bg);
+            border-radius: var(--radius-main);
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            box-shadow: 0 4px 6px -1px var(--shadow);
+
+            img {
+                border: 1px solid var(--white);
+            }
+        }
+
+        .dashboard-caption {
+            padding: var(--space-md);
+            text-align: center;
+            font-weight: 500;
+            color: var(--text-main);
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-light);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav aria-label="Main Navigation">
+                <a href="index.html" class="logo" style="color: var(--white); text-decoration: none;">{{ .Landing.PageTitle }}</a>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="dashboards.html">Dashboards</a></li>
+                    <li><a href="evolution.html">Evolution</a></li>
+                </ul>
+            </nav>
+            {{block "header_extra" .}}{{end}}
+        </div>
+    </header>
+
+    <main class="container">
+        {{template "content" .}}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Victoria Cheng. <a href="https://github.com/victoriacheng15/observability-platform">View Code
+                    on GitHub</a>.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
+{{end}}

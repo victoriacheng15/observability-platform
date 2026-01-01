@@ -1,0 +1,26 @@
+{{define "title"}}{{ .Landing.PageTitle }}{{end}}
+
+{{define "header_extra"}}
+<div class="hero" aria-label="{{ .Landing.Hero.Title }}">
+    <h1 class="hero-title">{{ .Landing.Hero.Title }}</h1>
+    <p>{{ .Landing.Hero.Subtitle }}</p>
+    <div class="hero-actions">
+        <a href="{{ .Landing.Hero.CtaLink }}" class="btn">{{ .Landing.Hero.CtaText }}</a>
+        <a href="{{ .Landing.Hero.Cta2Link }}" class="btn btn-secondary">{{ .Landing.Hero.Cta2Text }}</a>
+    </div>
+</div>
+{{end}}
+
+{{define "content"}}
+<section class="features" aria-label="Key Features">
+    {{range .Landing.Features}}
+    <article class="feature-card">
+        <div class="feature-icon" aria-hidden="true">
+             {{if eq .Icon "rocket"}}🚀{{else if eq .Icon "database"}}💾{{else if eq .Icon "chart-line"}}📈{{else}}✨{{end}}
+        </div>
+        <h3>{{ .Title }}</h3>
+        <p>{{ .Description }}</p>
+    </article>
+    {{end}}
+</section>
+{{end}}
