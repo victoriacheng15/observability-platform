@@ -36,12 +36,17 @@ type Landing struct {
 	Features  []Feature `yaml:"features"`
 }
 
+type Artifact struct {
+	Name string `yaml:"name"`
+	URL  string `yaml:"url"`
+}
+
 type Event struct {
-	Date             string   `yaml:"date"`
-	Title            string   `yaml:"title"`
-	Description      string   `yaml:"description"`
-	DescriptionLines []string `yaml:"-"`
-	RFC              string   `yaml:"rfc"`
+	Date             string     `yaml:"date"`
+	Title            string     `yaml:"title"`
+	Description      string     `yaml:"description"`
+	DescriptionLines []string   `yaml:"-"`
+	Artifacts        []Artifact `yaml:"artifacts"`
 }
 
 type Evolution struct {

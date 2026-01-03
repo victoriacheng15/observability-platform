@@ -15,7 +15,7 @@ A personal telemetry system that collects **system metrics** and **application e
 - **Continuous Contextual Telemetry:** Built to understand system behavior over time through continuous telemetry rather than one-off checks.
 - **Systemic Health Monitoring:** Tracks host health, debugs pipeline failures, and connects infrastructure metrics to application events.
 - **Data Ownership:** Prioritizes 100% self-hosted infrastructure and long-term data retention without cloud dependencies.
-- **Simplicity & Reliability:** Employs scheduled, stateless, and idempotent Go services over complex, heavy-weight agents.
+- **Simplicity & Reliability:** Employs scheduled, stateless, and idempotent services over complex, heavy-weight agents.
 - **Scale-Ready Storage:** Leverages TimescaleDB (PostgreSQL) for efficient time-series analysis and historical tracking.
 
 ---
@@ -24,7 +24,7 @@ A personal telemetry system that collects **system metrics** and **application e
 
 | Component | Approach |
 | :--- | :--- |
-| **Collectors** | Custom Go services—cron-driven, stateless, and idempotent. |
+| **Collectors** | Scheduled, stateless, and idempotent services. |
 | **Storage** | **TimescaleDB** with JSONB for unified metric/event storage. |
 | **Visualization** | **Grafana** dashboards separated by concern (infra vs. app). |
 | **Observability** | **Loki** (logs) and a **Go proxy** (ETL) for full telemetry coverage. |
