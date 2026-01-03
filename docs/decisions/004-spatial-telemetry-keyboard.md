@@ -1,7 +1,7 @@
 # RFC 004: Spatial Keyboard Telemetry Pipeline
 
 **Status:** Proposed
-**Date:** Jan 2026
+**Date:** 2026-01-03
 **Author:** Victoria Cheng
 
 ## The Problem
@@ -24,7 +24,7 @@ A distributed IoT pipeline consisting of three tiers:
 - **Distributed Architecture:** Decouples the data collection (Desktop) from the visualization (Laptop), allowing the observability hub to remain centralized.
 - **Spatial Focus:** By using PostGIS, we can perform advanced spatial queries (e.g., "distance traveled between keypresses") that are impossible in standard time-series databases.
 
-## Comparison
+## Comparison / Alternatives Considered
 
 | Feature | Python / Node Script | C++ Agent (Proposed) |
 | :--- | :--- | :--- |
@@ -33,7 +33,7 @@ A distributed IoT pipeline consisting of three tiers:
 | **Latentcy** | GC Pauses possible | Deterministic |
 | **Portability** | Requires Runtime (interpreter) | Static Binary |
 
-## Operational Excellence (Failure Modes)
+## Failure Modes (Operational Excellence)
 
 | Scenario | Impact | Mitigation |
 | :--- | :--- | :--- |
