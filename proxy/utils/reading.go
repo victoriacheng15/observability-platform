@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -56,8 +57,11 @@ func (s *ReadingService) ensureReadingAnalyticsTable() error {
 	_, err := s.DB.Exec(`CREATE TABLE IF NOT EXISTS reading_analytics (
 		id SERIAL PRIMARY KEY,
 		mongo_id TEXT UNIQUE NOT NULL,
+		event_timestamp TIMESTAMP,
+		source TEXT,
 		event_type TEXT,
 		payload JSONB,
+		meta JSONB,
 		created_at TIMESTAMP DEFAULT NOW()
 	)`)
 	return err
@@ -71,7 +75,15 @@ func (s *ReadingService) getMongoCollection() *mongo.Collection {
 
 func (s *ReadingService) fetchIngestedDocuments(ctx context.Context, coll *mongo.Collection) (*mongo.Cursor, error) {
 	filter := bson.M{"status": "ingested"}
-	opts := options.Find().SetLimit(10)
+
+	batchSize := 100 // Default
+	if envSize := os.Getenv("BATCH_SIZE"); envSize != "" {
+		if val, err := strconv.Atoi(envSize); err == nil && val > 0 {
+			batchSize = val
+		}
+	}
+
+	opts := options.Find().SetLimit(int64(batchSize))
 	return coll.Find(ctx, filter, opts)
 }
 
@@ -108,14 +120,17 @@ func (s *ReadingService) processDocuments(ctx context.Context, cursor *mongo.Cur
 
 func (s *ReadingService) insertIntoPostgres(doc bson.M, objID primitive.ObjectID) error {
 	eventType, _ := doc["event_type"].(string)
-	delete(doc, "status")
-	jsonData, _ := json.Marshal(doc)
+	source, _ := doc["source"].(string)
+	timestamp := doc["timestamp"]
+
+	payloadJSON, _ := json.Marshal(doc["payload"])
+	metaJSON, _ := json.Marshal(doc["meta"])
 
 	_, err := s.DB.Exec(
-		`INSERT INTO reading_analytics (mongo_id, event_type, payload, created_at) 
-		 VALUES ($1, $2, $3, NOW())
+		`INSERT INTO reading_analytics (mongo_id, event_timestamp, source, event_type, payload, meta, created_at) 
+		 VALUES ($1, $2, $3, $4, $5, $6, NOW())
 		 ON CONFLICT (mongo_id) DO NOTHING`,
-		objID.Hex(), eventType, jsonData,
+		objID.Hex(), timestamp, source, eventType, payloadJSON, metaJSON,
 	)
 	return err
 }
