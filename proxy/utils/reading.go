@@ -57,12 +57,12 @@ func (s *ReadingService) ensureReadingAnalyticsTable() error {
 	_, err := s.DB.Exec(`CREATE TABLE IF NOT EXISTS reading_analytics (
 		id SERIAL PRIMARY KEY,
 		mongo_id TEXT UNIQUE NOT NULL,
-		event_timestamp TIMESTAMP,
+		event_timestamp TIMESTAMPTZ,
 		source TEXT,
 		event_type TEXT,
 		payload JSONB,
 		meta JSONB,
-		created_at TIMESTAMP DEFAULT NOW()
+		created_at TIMESTAMPTZ DEFAULT NOW()
 	)`)
 	return err
 }

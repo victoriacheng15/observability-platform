@@ -1,0 +1,9 @@
+[Unit]
+Description=Timer for System Metrics Collection
+
+[Timer]
+OnCalendar=*:*:00
+AccuracySec=1s
+
+[Install]
+WantedBy=timers.target
