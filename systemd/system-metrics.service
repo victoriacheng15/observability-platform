@@ -1,0 +1,14 @@
+[Unit]
+Description=Collect System Metrics (CPU/Mem/Disk/Net)
+After=network.target postgresql.service
+
+[Service]
+Type=oneshot
+User=server
+WorkingDirectory=/home/server/software/observability-hub/system-metrics
+ExecStart=/home/server/software/observability-hub/system-metrics/metrics-collector.exe
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
