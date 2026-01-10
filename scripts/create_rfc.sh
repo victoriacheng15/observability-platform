@@ -47,9 +47,9 @@ DATE=$(date +%Y-%m-%d)
 cat <<EOF > "$FILENAME"
 # RFC ${ID}: ${TITLE}
 
-**Status:** Proposed | Accepted | Superseded
-**Date:** ${DATE}
-**Author:** Victoria Cheng
+- *Status:** Proposed | Accepted | Superseded
+- **Date:** ${DATE}
+- **Author:** Victoria Cheng
 
 ## The Problem
 

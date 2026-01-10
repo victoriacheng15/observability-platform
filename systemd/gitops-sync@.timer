@@ -1,0 +1,9 @@
+[Unit]
+Description=Run GitOps Sync for %i every 5 minutes
+
+[Timer]
+OnUnitActiveSec=5m
+Unit=gitops-sync@%i.service
+
+[Install]
+WantedBy=timers.target
