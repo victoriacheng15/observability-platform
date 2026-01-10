@@ -1,6 +1,6 @@
 # RFC 005: Centralized GitOps Reconciliation Engine
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-01-03
 - **Author:** Victoria Cheng
 
@@ -19,49 +19,42 @@ Before committing to a full GitOps engine, the Systemd Timer approach was valida
 - **Maintainability**: Deployment via generic Makefile targets for system-wide service management.
 - **Unified Scheduling**: Benchmarking systemd's ability to manage diverse telemetry collectors (API polling vs. system probing) consistently.
 
-## Proposed Solution
+## Implementation Roadmap
 
-Implement a "Pull-based" synchronization agent managed by **Systemd Timers**. To maintain simplicity and ensure stability, the rollout follows a structured three-phase roadmap:
+To maintain simplicity and ensure stability, the rollout follows a structured three-phase roadmap:
 
 - **Phase 1: Observability Hub Sync:** Initial rollout focusing exclusively on automating `git pull` for the `observability-hub` repository. This validates the Systemd/Bash mechanism and eliminates the manual overhead for the core platform.
-- **Phase 2: Project Expansion:** Expand the automated synchronization mechanism to other repositories within the homelab environment.
+- **Phase 2: Project Expansion:** Expand the automated synchronization mechanism to other repositories within the homelab environment using Systemd templates.
 - **Phase 3: State Enforcement (Docker):** Once the synchronization mechanism is stable across all repositories, the agent will be expanded to trigger service restarts (e.g., `docker compose up -d`) to apply configuration changes automatically.
 
-- **Systemd Integration:** Using `Type=oneshot` services and `Persistent=true` timers ensures that synchronization is reliable, dependency-aware (starts after network/docker), and natively integrated with `journald` for observability.
+## Solution Architecture
 
-### Architecture Snippet (The Controller)
+We implemented a "Pull-based" synchronization agent managed by **Templated Systemd Timers**. This approach prioritizes security, scalability, and observability.
 
-```bash
-#!/bin/bash
-# gitops-sync: A repository synchronization agent
-set -euo pipefail
+### 1. The Controller (Bash Agent)
 
-REPO_PATH=$1
-cd "$REPO_PATH"
+The core logic is contained in [scripts/gitops_sync.sh](../../scripts/gitops_sync.sh). The agent uses an **Allowlist** pattern to prevent unauthorized access and **Logfmt** (structured logging) for native Loki integration.
 
-git fetch origin main --quiet
-LOCAL_HASH=$(git rev-parse HEAD)
-REMOTE_HASH=$(git rev-parse origin/main)
+### 2. Scalability (Systemd Templates)
 
-if [ "$LOCAL_HASH" != "$REMOTE_HASH" ]; then
-    echo "Changes detected. Synchronizing repository..."
-    git pull origin main
-    # TODO: Trigger container updates in Phase 3
-else
-    echo "Repository in sync."
-fi
-```
+We use the `@` symbol to create a single template that can service multiple repositories. This directly enables **Phase 2** of the roadmap.
+
+- **Unit:** `gitops-sync@.service`
+- **Timer:** `gitops-sync@.timer`
+
+To scale to a new repository (e.g., `mehub`), we simply enable a new instance without creating new service files:
+`systemctl enable --now gitops-sync@mehub.timer`
 
 ## Comparison / Alternatives Considered
 
 - **ArgoCD / Flux:** While powerful, these tools introduce significant resource overhead (RAM/CPU) for a single-node homelab. A Bash-based agent provides $O(1)$ overhead.
-- **Standard Cron:** Functional but limited. While Cron is the standard for scheduled tasks, we are explicitly choosing Systemd Timers to **evaluate** their suitability for infrastructure unified scheduling. This decision is driven by a desire to benchmark Systemd's native dependency management and logging capabilities against the traditional Cron approach.
+- **Standard Cron:** Functional but limited. We explicitly chose Systemd Timers to leverage native dependency management (`After=network.target`) and unified journald logging.
 
 ## Failure Modes (Operational Excellence)
 
-- **Git Pull Conflict:** If the local state deviates manually, the sync will fail. **Mitigation:** The script will exit with a non-zero code, visible in `systemctl status`, and can be configured to send an alert to the Observability Hub.
-- **Runtime Downtime:** If Docker is down during a sync, docker commands will fail. **Mitigation:** Systemd's `After=docker.service` ensures the sync only runs when the cluster is healthy.
+- **Git Pull Conflict:** If the local state deviates manually, the sync will fail. **Mitigation:** The script will exit with a non-zero code, visible in `systemctl status`.
+- **Unauthorized Access:** If a user tries to sync an arbitrary directory. **Mitigation:** The allowlist logic prevents the script from acting on any directory not explicitly approved.
 
 ## Conclusion
 
-This "Hub-and-Spoke" GitOps strategy provides a low-overhead automation pipeline that eliminates manual synchronization tasks. By using native Linux primitives, we ensure the system stays in sync with the remote repository reliably and without manual `git pull` commands.
+This "Hub-and-Spoke" GitOps strategy provides a low-overhead, secure automation pipeline. By using native Linux primitives and templating, we ensure the system stays in sync with the remote repository reliably, while the "Allowlist" mechanism adheres to Zero Trust principles.

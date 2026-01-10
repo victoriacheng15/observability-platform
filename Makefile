@@ -13,6 +13,7 @@ help:
 	@echo "  make proxy-down         - Stop the go proxy server"
 	@echo "  make proxy-update       - Rebuild and restart the go proxy server"
 	@echo "  make install-services   - Install all systemd units from ./systemd"
+	@echo "  make reload-services    - Update systemd units (cp + daemon-reload)"
 	@echo "  make uninstall-services - Uninstall all systemd units from ./systemd"
 
 # Architecture Decision Record Creation
@@ -78,17 +79,25 @@ proxy-update: proxy-down proxy-up
 
 # Systemd Service Management
 install-services:
-	@echo "Installing all systemd units from ./systemd/..."
+	@echo "Installing all systemd units..."
 	@sudo cp systemd/*.service /etc/systemd/system/ 2>/dev/null || true
 	@sudo cp systemd/*.timer /etc/systemd/system/ 2>/dev/null || true
 	@sudo systemctl daemon-reload
-	@echo "Enabling and starting timers..."
-	@for timer in $$(ls systemd/*.timer 2>/dev/null); do \
+	@echo "Enabling regular timers..."
+	@for timer in $$(ls systemd/*.timer 2>/dev/null | grep -v "@"); do \
 		timer_name=$$(basename $$timer); \
-		sudo systemctl enable $$timer_name; \
-		sudo systemctl start $$timer_name; \
+		sudo systemctl enable --now $$timer_name; \
 	done
+	@echo "Enabling GitOps for this repo..."
+	@sudo systemctl enable --now gitops-sync@observability-hub.timer
 	@echo "Installation complete."
+
+reload-services:
+	@echo "Reloading systemd units..."
+	@sudo cp systemd/*.service /etc/systemd/system/ 2>/dev/null || true
+	@sudo cp systemd/*.timer /etc/systemd/system/ 2>/dev/null || true
+	@sudo systemctl daemon-reload
+	@echo "Configuration reloaded. Timers will pick up changes on next run."
 
 uninstall-services:
 	@echo "Uninstalling all systemd units found in ./systemd/..."

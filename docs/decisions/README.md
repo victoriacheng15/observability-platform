@@ -30,9 +30,9 @@ To create a new proposal, copy the block below into a new `.md` file.
 ```markdown
 # RFC [00X]: [Descriptive Title]
 
-**Status:** Proposed | Accepted | Superseded  
-**Date:** YYYY-MM-DD  
-**Author:** Victoria Cheng
+- **Status:** Proposed | Accepted | Superseded  
+- **Date:** YYYY-MM-DD  
+- **Author:** Victoria Cheng
 
 ## The Problem
 
