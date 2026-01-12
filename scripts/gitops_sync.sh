@@ -47,9 +47,15 @@ CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [[ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]]; then
     log "WARN" "Current branch ($CURRENT_BRANCH) is not $TARGET_BRANCH. Switching..."
     if ! git checkout "$TARGET_BRANCH"; then
-        log "ERROR" "Failed to switch to $TARGET_BRANCH. Check for uncommitted changes."
+        log "ERROR" "Failed to switch to $TARGET_BRANCH. Check for uncommitted changes or conflicts."
         exit 1
     fi
+fi
+
+# Safety Barrier: Check for uncommitted changes AFTER switching
+if [[ -n $(git status --porcelain) ]]; then
+    log "ERROR" "Uncommitted changes detected. Aborting sync to prevent data loss."
+    exit 1
 fi
 
 if ! git fetch origin "$TARGET_BRANCH" --quiet; then
