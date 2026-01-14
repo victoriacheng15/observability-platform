@@ -1,6 +1,6 @@
 # Self-Hosted Observability Hub
 
-A personal telemetry system that collects **system metrics** and **application events**, stores them in **PostgreSQL** (supercharged with **TimescaleDB** and **PostGIS**), and visualizes everything in **Grafana**, enabling high-performance time-series analysis and flexible data correlation.
+A **production-grade telemetry platform** architected to demonstrate **SRE & Platform Engineering principles**: full-stack observability, **GitOps-driven infrastructure**, and standardized data ingestion. It unifies **system metrics**, **application events**, and **logs** into a single queryable layer using **PostgreSQL (TimescaleDB)** and **Loki**, visualized via **Grafana**.
 
 ---
 
@@ -10,12 +10,13 @@ A personal telemetry system that collects **system metrics** and **application e
 
 ---
 
-## 🎨 Design Philosophy
+## 🏗️ Engineering Principles
 
-- **Holistic System Monitoring:** Tracks host health and application events through continuous telemetry, providing a unified view of system behavior over time.
-- **Data Ownership & Self-Hosting:** Prioritizes self-hosted infrastructure for long-term data retention and full control, without cloud dependencies.
-- **Reliability through Automation:** Employs simple, stateless services and a GitOps reconciliation engine to ensure a resilient, self-healing deployment that matches the declared state in Git.
-- **Scale-Ready Storage:** Leverages PostgreSQL with TimescaleDB for efficient, long-term time-series analysis and flexible data correlation.
+- **Unified Observability & Standardization:** Eliminates data silos by correlating host-level infrastructure metrics (CPU/Memory/IO) with application-level business events. This provides a **"Golden Path"** for telemetry, ensuring all services are observed via a consistent standard.
+- **API-Driven Abstraction:** The `proxy` service acts as a **Platform Interface**, decoupling data ingestion from storage. Client apps (like Cover Craft) emit events to a simple endpoint (MongoDB), while the platform handles the complexity of ETL and efficient **TimescaleDB** storage.
+- **GitOps & Self-Healing:** Implements a custom **reconciliation engine** (`gitops-sync`) to enforce state consistency between the Git repository and the host, ensuring **configuration drift** is automatically corrected without manual intervention.
+- **Hybrid Runtime Architecture:** leverages the right tool for the job—containerizing stateless services (Docker) while running privileged automation agents directly on the host (Systemd) for reliability and access to kernel-level stats.
+- **High-Performance Storage:** Optimizes for high-volume time-series write throughput and geospatial analysis using **TimescaleDB** hypertables and **PostGIS**, avoiding the operational overhead of managing separate specialized databases.
 
 ---
 
@@ -120,6 +121,28 @@ For deep dives into the system's inner workings:
 
 - **[Detailed Architecture Docs](./docs/architecture/README.md)**: System context, component diagrams, and data flows.
 - **[Decision Records](./docs/decisions/README.md)**: Architectural Decision Records (ADRs) explaining the "Why" behind key technical choices.
+
+---
+
+## 🚢 Deployment Strategy
+
+The platform employs a **Hybrid Deployment Model** to balance security, reliability, and convenience:
+
+### 1. Core Infrastructure (Pull-based GitOps)
+
+The critical observability stack (Postgres, Grafana, Proxy) and host configurations are managed by a **self-hosted reconciliation agent** (`gitops-sync`).
+
+- **Mechanism:** A systemd timer triggers a local script every 15 minutes.
+- **Action:** Pulls the latest `main` branch, diffs the state, and applies changes (e.g., restarts services, updates crons).
+- **Benefit:** Eliminates the need for inbound SSH access or sensitive secrets in external CI pipelines.
+
+### 2. Public Portfolio (Push-based CI/CD)
+
+The static status page is built and deployed via **GitHub Actions**.
+
+- **Mechanism:** Standard CI pipeline defined in `.github/workflows/deploy.yml`.
+- **Action:** Builds the Go `page` generator and deploys the output to GitHub Pages.
+- **Benefit:** Fast feedback loops and high availability for the public-facing component.
 
 ---
 
