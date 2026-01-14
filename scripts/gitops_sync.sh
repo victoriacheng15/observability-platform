@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_NAME=${1:-""}
-ALLOWED_REPOS=("observability-hub")
+ALLOWED_REPOS=("observability-hub" "mehub")
 BASE_DIR="/home/server/software"
 
 # Log helper using jq for safe JSON generation

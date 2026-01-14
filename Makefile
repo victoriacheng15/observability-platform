@@ -88,33 +88,36 @@ proxy-update: proxy-down proxy-up
 
 # Systemd Service Management
 install-services:
-	@echo "Installing all systemd units..."
-	@sudo cp systemd/*.service /etc/systemd/system/ 2>/dev/null || true
-	@sudo cp systemd/*.timer /etc/systemd/system/ 2>/dev/null || true
+	@echo "Installing all systemd units as symlinks..."
+	@sudo ln -sf $(CURDIR)/systemd/*.service /etc/systemd/system/
+	@sudo ln -sf $(CURDIR)/systemd/*.timer /etc/systemd/system/
 	@sudo systemctl daemon-reload
 	@echo "Enabling regular timers..."
 	@for timer in $$(ls systemd/*.timer 2>/dev/null | grep -v "@"); do \
 		timer_name=$$(basename $$timer); \
 		sudo systemctl enable --now $$timer_name; \
 	done
-	@echo "Enabling GitOps for this repo..."
+	@echo "Enabling GitOps for repos..."
 	@sudo systemctl enable --now gitops-sync@observability-hub.timer
+	@sudo systemctl enable --now gitops-sync@mehub.timer
 	@echo "Installation complete."
 
 reload-services:
 	@echo "Reloading systemd units..."
-	@sudo cp systemd/*.service /etc/systemd/system/ 2>/dev/null || true
-	@sudo cp systemd/*.timer /etc/systemd/system/ 2>/dev/null || true
 	@sudo systemctl daemon-reload
-	@echo "Configuration reloaded. Timers will pick up changes on next run."
+	@echo "Configuration reloaded. Changes in ./systemd are active (timers may need restart)."
 
 uninstall-services:
-	@echo "Uninstalling all systemd units found in ./systemd/..."
+	@echo "Stopping and disabling all project units..."
+	# 1. Explicitly handle known instances
+	@sudo systemctl disable --now gitops-sync@observability-hub.timer 2>/dev/null || true
+	@sudo systemctl disable --now gitops-sync@mehub.timer 2>/dev/null || true
+	# 2. Generic cleanup for all units in ./systemd
 	@for unit in $$(ls systemd/*.service systemd/*.timer 2>/dev/null); do \
 		unit_name=$$(basename $$unit); \
-		sudo systemctl stop $$unit_name || true; \
-		sudo systemctl disable $$unit_name || true; \
-		sudo rm /etc/systemd/system/$$unit_name || true; \
+		sudo systemctl stop $$unit_name 2>/dev/null || true; \
+		sudo systemctl disable $$unit_name 2>/dev/null || true; \
+		sudo rm /etc/systemd/system/$$unit_name 2>/dev/null || true; \
 	done
 	@sudo systemctl daemon-reload
-	@echo "Uninstallation complete."
+	@echo "Uninstallation complete. Systemd is clean."
