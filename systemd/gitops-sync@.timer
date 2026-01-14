@@ -1,8 +1,8 @@
 [Unit]
-Description=Run GitOps Sync for %i every 5 minutes
+Description=Run GitOps Sync for %i every 15 minutes
 
 [Timer]
-OnUnitActiveSec=5m
+OnUnitActiveSec=15m
 Unit=gitops-sync@%i.service
 
 [Install]
