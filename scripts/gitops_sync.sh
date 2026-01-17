@@ -51,7 +51,25 @@ TARGET_BRANCH="main"
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
 if [[ "$CURRENT_BRANCH" != "$TARGET_BRANCH" ]]; then
-    log "WARN" "Current branch ($CURRENT_BRANCH) is not $TARGET_BRANCH. Switching..."
+    # Check if GitHub CLI is available for PR state detection
+    if command -v gh >/dev/null 2>&1; then
+        PR_STATE=$(gh pr view "$CURRENT_BRANCH" --json state --jq .state 2>/dev/null || echo "NONE")
+
+        if [[ "$PR_STATE" == "OPEN" ]]; then
+            log "INFO" "Active PR detected for branch ($CURRENT_BRANCH). Skipping sync to protect active work."
+            exit 0
+        elif [[ "$PR_STATE" == "NONE" ]]; then
+            log "INFO" "Local development branch detected ($CURRENT_BRANCH). Skipping sync."
+            exit 0
+        fi
+
+        # If MERGED or CLOSED, proceed with switching to main
+        log "WARN" "Branch ($CURRENT_BRANCH) PR is $PR_STATE. Switching to $TARGET_BRANCH..."
+    else
+        log "WARN" "Current branch ($CURRENT_BRANCH) is not $TARGET_BRANCH and gh CLI not found. Skipping sync."
+        exit 0
+    fi
+
     if ! git checkout "$TARGET_BRANCH" >/dev/null 2>&1; then
         log "ERROR" "Failed to switch to $TARGET_BRANCH. Check for uncommitted changes or conflicts."
         exit 1
@@ -85,9 +103,6 @@ if [[ "$LOCAL_HASH" != "$REMOTE_HASH" ]]; then
         log "ERROR" "Pull failed: $SAFE_OUTPUT"
         exit 1
     fi
-else
-    # INFO level can be filtered out in Grafana to reduce noise
-    log "INFO" "Already in sync."
 fi
 
 # 3. Cleanup Logic (delete all local branches except main)
@@ -104,6 +119,4 @@ if [[ -n "$LOCAL_BRANCHES" ]]; then
         SAFE_OUTPUT=$(echo "$OUTPUT" | head -c 2048)
         log "WARN" "Failed to delete some branches: $SAFE_OUTPUT"
     fi
-else
-    log "INFO" "No local branches to delete"
 fi
