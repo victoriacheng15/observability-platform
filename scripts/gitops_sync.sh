@@ -91,7 +91,6 @@ LOCAL_HASH=$(git rev-parse HEAD)
 REMOTE_HASH=$(git rev-parse origin/main)
 
 if [[ "$LOCAL_HASH" != "$REMOTE_HASH" ]]; then
-    log "SUCCESS" "New changes detected. Synchronizing..."
     # Capture output to prevent raw text leaking to stdout (which breaks JSON parsing)
     if OUTPUT=$(git pull origin main 2>&1); then
         # Truncate output to protect JSON integrity in journald (max 2KB)
@@ -108,13 +107,11 @@ fi
 # 3. Cleanup Logic (delete all local branches except main)
 LOCAL_BRANCHES=$(git branch --format='%(refname:short)' 2>/dev/null | grep -v '^main$' || true)
 if [[ -n "$LOCAL_BRANCHES" ]]; then
-    log "INFO" "Local branches to delete: ${LOCAL_BRANCHES}"
     # Capture output of branch deletion
     if OUTPUT=$(echo "$LOCAL_BRANCHES" | xargs -r git branch -D 2>&1); then
         SAFE_OUTPUT=$(echo "$OUTPUT" | head -c 2048)
         if [[ ${#OUTPUT} -gt 2048 ]]; then SAFE_OUTPUT="${SAFE_OUTPUT}... (truncated)"; fi
         log "INFO" "$SAFE_OUTPUT"
-        log "SUCCESS" "Deleted local branches: ${LOCAL_BRANCHES}"
     else
         SAFE_OUTPUT=$(echo "$OUTPUT" | head -c 2048)
         log "WARN" "Failed to delete some branches: $SAFE_OUTPUT"
