@@ -1,0 +1,20 @@
+name: Label-Based PR Merge
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    if: github.event.label.name == 'merge'
+    steps:
+      - uses: victoriacheng15hub/platform-actions/merge-on-label@v0
+        with:
+          label: merge
+          merge_method: squash
+          token: ${{ secrets.GITHUB_TOKEN }}
